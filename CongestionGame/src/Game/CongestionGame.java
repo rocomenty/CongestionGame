@@ -16,6 +16,8 @@ public class CongestionGame {
 	
 	public int[] path_instance; //record number of agents on each path for one simulation
 	
+	public double[] aggr_result;
+	
 	public CongestionGame(int n_f_a, int n_e_a, int n_u_a, int n_t_a) {
 		round = 0;
 		num_agent = n_f_a + n_e_a + n_u_a + n_t_a;
@@ -69,8 +71,10 @@ public class CongestionGame {
 			reward = paths[path_index].totalCost(path_instance[path_index]);
 			a.reward_history.add(reward);
 		}
+		
+		
+		
 	}
-	
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
