@@ -91,6 +91,7 @@ public class CongestionGame {
 //			}
 //		}
 		System.out.println();
+		System.out.println("Iteration: " + round);
 		System.out.println("Path #1: " + path_instance[0]);
 		System.out.println("Path #2: " + path_instance[1]);
 		System.out.println("Path #3: " + path_instance[2]);
@@ -105,8 +106,8 @@ public class CongestionGame {
 	}
 	
 	public static void main(String[] args) {
-		CongestionGame game = new CongestionGame(0,1000,1000,0, 100.0, 45.0);
-		game.simulator(100);
+		CongestionGame game = new CongestionGame(4000,0,0,0,100.0, 45.0);
+		game.simulator(10);
 	}
 
 }
