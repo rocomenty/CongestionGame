@@ -13,12 +13,13 @@ public class Road {
 		this.cost = cost;
 		this.ratio = ratio;
 	}
-	
+
 	double calculateCost(int agent_num) {
 		if (fixed) {
 			return this.cost;
 		} else {
-			return agent_num /(this.ratio);
+			double dubAgent = (double)(1.0*(agent_num));
+			return dubAgent /(this.ratio);
 		}
 	}
 }

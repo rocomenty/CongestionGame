@@ -24,7 +24,12 @@ public class Path {
 	}
 	
 	public double totalCost(int agent_num) {
-		double total = 0;
+		double total = 0.0;
+		
+		if(agent_num == 0) {
+			return total;
+		}
+		
 		for (Road r : roads) {
 			total += r.calculateCost(agent_num);
 		}
