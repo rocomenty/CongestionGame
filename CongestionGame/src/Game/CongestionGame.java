@@ -18,7 +18,7 @@ public class CongestionGame {
 	
 	public double[] aggr_result;
 	
-	public CongestionGame(int n_f_a, int n_e_a, int n_u_a, int n_t_a) {
+	public CongestionGame(int n_f_a, int n_e_a, int n_u_a, int n_t_a,  double ratio, double cost) {
 		agents = new ArrayList<Agent>();
 		paths = new Path[3];
 		round = 0;
@@ -34,12 +34,12 @@ public class CongestionGame {
 		for (int i = 0; i < n_u_a; ++i) {
 			agents.add(new Agent(AgentType.UAgent));
 		}
-		for (int i = 0; i < n_t_a; ++i) {
-			agents.add(new Agent(AgentType.TAgent));
-		}
-		paths[0] = new Path(PathType.TOP);
-		paths[1] = new Path(PathType.MID);
-		paths[2] = new Path(PathType.BOT);
+//		for (int i = 0; i < n_t_a; ++i) {
+//			agents.add(new Agent(AgentType.TAgent));
+//		}
+		paths[0] = new Path(PathType.TOP, ratio, cost);
+		paths[1] = new Path(PathType.MID, ratio, cost);
+		paths[2] = new Path(PathType.BOT, ratio, cost);
 		path_history = new int[num_path];
 		path_dist = new double[num_path];
 		path_instance = new int[num_path];
@@ -56,32 +56,23 @@ public class CongestionGame {
 		round += 1;
 		Arrays.fill(path_instance, 0);
 		Path choice;
-		int counter = 0;
+		
 		for (Agent a : agents) {
-			counter++;
-			System.out.print("How many agents added: " + counter + " of " + agents.size());
-			System.out.println("hello: " + a + " ");
+	
 			choice = a.choosePath(this);
-			System.out.print("Agent: " + a + " ");
-			System.out.println("choice:" + choice);
+
 			
 			try{
-				System.out.println("choice type:" + choice.type);
+				a.path_history.add(choice);
 			} catch(NullPointerException e) {
 				System.out.println("round:" + round);
 				System.out.println("agent:" + a + "'s history: " + a.path_history);
 				
 			}
-			System.out.println("choice ordinal:" + choice.type.ordinal());
-			
-
-			a.path_history.add(choice);
-
 			
 			path_history[choice.type.ordinal()] += 1;
-			System.out.println("history " + a + " ");
 			path_instance[choice.type.ordinal()] += 1;
-			System.out.println("instance " + a + " ");
+			
 		}
 		normalize();
 		
@@ -93,16 +84,29 @@ public class CongestionGame {
 			path_index = choice.type.ordinal();
 			reward = paths[path_index].totalCost(path_instance[path_index]);
 			a.reward_history.add(reward);
-			System.out.println("hello");
 		}
-		
+//		for(Path p : paths) {
+//			for(Road r : p.roads) {
+//				System.out.println("Road cost: " + r.cost);
+//			}
+//		}
+		System.out.println();
+		System.out.println("Path #1: " + path_instance[0]);
+		System.out.println("Path #2: " + path_instance[1]);
+		System.out.println("Path #3: " + path_instance[2]);
 		
 		
 	}
 	
+	public void simulator(int runs) {
+		for(int i = 0; i < runs; i++) {
+			this.simulate();
+		}
+	}
+	
 	public static void main(String[] args) {
-		CongestionGame game = new CongestionGame(2,2,2,2);
-		game.simulate();
+		CongestionGame game = new CongestionGame(0,10,1000,0, 100.0, 45.0);
+		game.simulator(50);
 	}
 
 }

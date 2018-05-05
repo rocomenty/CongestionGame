@@ -71,29 +71,42 @@ public class Agent {
 		case UAgent:
 			double[] avg = new double[3];
 			int[] counts = new int[3];
+			avg[0] = 0;
+			avg[1] = 0;
+			avg[2] = 0;
 			for (int i = 0; i < path_history.size(); ++i) {
 				Path p = path_history.get(i);
 				switch (p.type) {
 				case TOP:
 					counts[0] ++;
-					avg[0] += reward_history.get(i);
+					//avg[0] += reward_history.get(i);
+					avg[0] = (avg[0] + reward_history.get(i))/2;
 					break;
 				case MID:
 					counts[1] ++;
-					avg[1] += reward_history.get(i);
+					//avg[1] += reward_history.get(i);
+					avg[1] = (avg[1] + reward_history.get(i))/2;
 					break;
 				case BOT:
 					counts[2] ++;
-					avg[2] += reward_history.get(i);
+					//avg[2] += reward_history.get(i);
+					avg[2] = (avg[2] + reward_history.get(i))/2;
 					break;
 				}
 			}
 			int total_move = path_history.size();
-			double min = avg[0] / counts[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
+//			double min = avg[0] / counts[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
+			double min = avg[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
 			best_route = 0;
 			double valuation;
 			for (int i = 1; i < avg.length; ++i) {
-				valuation = avg[i] / counts[i] + Math.sqrt(2*Math.log(total_move) / counts[i]);
+				//valuation = avg[i] / counts[i] + Math.sqrt(2*Math.log(total_move) / counts[i]);
+				if(counts[i] != 0) {
+					valuation = avg[i] + Math.sqrt(2*Math.log(total_move) / counts[i]);
+				} else {
+					valuation = 0.0;
+				}
+			
 				if (valuation < min) {
 					min = valuation;
 					best_route = i;

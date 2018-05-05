@@ -7,15 +7,15 @@ public class Path {
 	ArrayList<Road> roads;
 	PathType type;
 	
-	public Path(PathType t) {
+	public Path(PathType t, double ratio, double cost) {
 		roads = new ArrayList<Road>();
 		type = t;
 		if (t == PathType.MID) { //mid path is two roads with variable cost
-			roads.add(new Road(false));
-			roads.add(new Road(false));
+			roads.add(new Road(false, ratio, cost));
+			roads.add(new Road(false, ratio, cost));
 		} else { //top & bot path is two roads with one variable and one fixed cost
-			roads.add(new Road(false));
-			roads.add(new Road(true));
+			roads.add(new Road(false, ratio, cost));
+			roads.add(new Road(true, ratio, cost));
 		}
 	}
 	
