@@ -1,6 +1,6 @@
 package Game;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class Agent {
 	private AgentType type;
@@ -94,11 +94,15 @@ public class Agent {
 					break;
 				}
 			}
+		
 			int total_move = path_history.size();
 //			double min = avg[0] / counts[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
 			double min = avg[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
 			best_route = 0;
 			double valuation;
+			ArrayList<Integer> mins = new ArrayList<Integer>();
+			mins.add(0);
+			
 			for (int i = 1; i < avg.length; ++i) {
 				//valuation = avg[i] / counts[i] + Math.sqrt(2*Math.log(total_move) / counts[i]);
 				if(counts[i] != 0) {
@@ -106,12 +110,21 @@ public class Agent {
 				} else {
 					valuation = 0.0;
 				}
-			
+				
 				if (valuation < min) {
+					mins.clear();
+					mins.add(i);
 					min = valuation;
 					best_route = i;
+				} 
+				else if(valuation == min) {
+					mins.add(i);
 				}
 			}
+			if(mins.size() > 1) {
+				int rando = (int)(Math.random()*mins.size());
+				best_route = mins.get(rando);
+			} 
 			return g.paths[best_route];
 		default:
 			return null;
