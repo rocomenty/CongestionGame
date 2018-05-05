@@ -36,5 +36,8 @@ public class Path {
 		return total;
 	}
 	
+	public String toString() {
+		return "Path: " + type.ordinal();
+	}
 	
 }

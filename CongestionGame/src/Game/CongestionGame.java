@@ -25,28 +25,35 @@ public class CongestionGame {
 	public String[] agent_types = {"FAgent", "EAgent", "UAgent", "DAgent"};
 	public int weatherCount = 0;
 	
-	public CongestionGame(int n_f_a, int n_e_a, int n_u_a, int n_d_a,  double ratio, double cost) {
+	public CongestionGame(int n_f_a, int n_e_a, int n_u_a, int n_d_a,  double ratio, double cost, boolean has_super) {
 		agents = new ArrayList<Agent>();
-		paths = new Path[3];
+		if (has_super) {
+			paths = new Path[3];
+			paths[0] = new Path(PathType.TOP, ratio, cost);
+			paths[1] = new Path(PathType.MID, ratio, cost);
+			paths[2] = new Path(PathType.BOT, ratio, cost);
+			num_path = 3;
+		} else {
+			paths = new Path[2];
+			paths[0] = new Path(PathType.TOP, ratio, cost);
+			paths[1] = new Path(PathType.BOT, ratio, cost);
+			num_path = 2;
+		}
 		round = 0;
 		num_agent = n_f_a + n_e_a + n_u_a + n_d_a;
-		num_path = 3;
 		data = new ArrayList<int[][]>();
 		for (int i = 0; i < n_f_a; ++i) {
-			agents.add(new Agent(AgentType.FAgent));
+			agents.add(new Agent(AgentType.FAgent, this));
 		}
 		for (int i = 0; i < n_e_a; ++i) {
-			agents.add(new Agent(AgentType.EAgent));
+			agents.add(new Agent(AgentType.EAgent, this));
 		}
 		for (int i = 0; i < n_u_a; ++i) {
-			agents.add(new Agent(AgentType.UAgent));
+			agents.add(new Agent(AgentType.UAgent, this));
 		}
 		for (int i = 0; i < n_d_a; ++i) {
-			agents.add(new Agent(AgentType.DAgent));
+			agents.add(new Agent(AgentType.DAgent, this));
 		}
-		paths[0] = new Path(PathType.TOP, ratio, cost);
-		paths[1] = new Path(PathType.MID, ratio, cost);
-		paths[2] = new Path(PathType.BOT, ratio, cost);
 		path_history = new int[num_path];
 		path_dist = new double[num_path];
 		path_instance = new int[num_path];
@@ -62,13 +69,14 @@ public class CongestionGame {
 	
 	public void simulate() {
 		double inclementWeather = Math.random();
-		agentChoice = new int[4][3];
+		agentChoice = new int[4][num_path];
 		round += 1;
 		Arrays.fill(path_instance, 0);
 		Path choice;
 		
 		for (Agent a : agents) {
 			choice = a.choosePath(this);
+			
 			try{
 				a.path_history.add(choice);
 			} catch(NullPointerException e) {
@@ -76,8 +84,18 @@ public class CongestionGame {
 				System.out.println("agent:" + a + "'s history: " + a.path_history);
 				
 			}
-			path_instance[choice.type.ordinal()] += 1;
-			agentChoice[a.type.ordinal()][choice.type.ordinal()] ++;
+			if (num_path == 2) {
+				if (choice.type == PathType.BOT) {
+					path_instance[1] += 1;
+					agentChoice[a.type.ordinal()][1] ++;
+				} else {
+					path_instance[0] += 1;
+					agentChoice[a.type.ordinal()][0] ++;
+				}
+			} else {
+				path_instance[choice.type.ordinal()] += 1;
+				agentChoice[a.type.ordinal()][choice.type.ordinal()] ++;
+			}
 //			switch(a.type){
 //				case FAgent:
 //					agentChoice[a.type.ordinal()][choice.type.ordinal()] ++;
@@ -122,7 +140,19 @@ public class CongestionGame {
 		
 		for (Agent a : agents) {
 			choice = a.path_history.get(a.path_history.size() - 1);
-			path_index = choice.type.ordinal();
+			if (num_path == 2) {
+				if (choice.type == PathType.BOT) {
+					path_index = 1;
+				} else {
+					path_index = 0;
+				}
+			} else {
+				path_index = choice.type.ordinal();
+			}
+			
+			if (a.type == AgentType.FAgent) {
+				a.recordOthers(path_instance);
+			}
 			
 			reward = ((paths[path_index].totalCost(path_instance[path_index]))*(unforseenCircumstances[path_index]));
 			
@@ -133,10 +163,27 @@ public class CongestionGame {
 //			}
 			
 			a.reward_history.add(reward);
-			path_history[choice.type.ordinal()] += 1;
+			if (num_path == 2) {
+				if (choice.type == PathType.BOT) {
+					path_history[1] += 1;
+				} else {
+					path_history[0] += 1;
+				}
+			} else {
+				path_history[choice.type.ordinal()] += 1;
+			}
 		}
 		normalize();
 		data.add(agentChoice);
+		System.out.println("Round: " + round);
+		for (int i = 0; i < 4; ++i) {
+			System.out.println("Agent: " + i + " choices: ");
+			for (int j = 0; j < num_path; ++j) {
+				System.out.print(agentChoice[i][j] + ", ");
+			}
+			System.out.println();
+		}
+		System.out.println();
 //		System.out.println("Top path: " + path_instance[0]);
 //		System.out.println("Mid path: " + path_instance[1]);
 //		System.out.println("Bot path: " + path_instance[2]);
@@ -160,9 +207,9 @@ public class CongestionGame {
 //		for (int r = 0; r < data.size(); r++) {
 //			int [][] a = data.get(r);
 //			System.out.println("Round: " + r);
-//			for (int i = 0; i < a.length; ++i) {
+//			for (int i = 0; i < 4; ++i) {
 //				System.out.println("Agent type: " + agent_types[i]);
-//				for (int j = 0; j < a[i].length; ++j) {
+//				for (int j = 0; j < num_path; ++j) {
 //					System.out.println("Path: " + j + ", Num: " + agentChoice[i][j]);
 //				}
 //			}
@@ -221,8 +268,8 @@ public class CongestionGame {
 	
 	public static void main(String[] args) {
 		//CongestionGame game = new CongestionGame(FA,EA,UBA,DA,n/ratio,fixed);
-		CongestionGame game = new CongestionGame(1,0,39,0,1,45);
-		game.simulator(1000);
+		CongestionGame game = new CongestionGame(40,0,0,0,1,45, true);
+		game.simulator(5);
 	}
 	
 

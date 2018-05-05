@@ -4,13 +4,18 @@ import java.util.*;
 
 public class Agent {
 	public AgentType type;
-
 	public ArrayList<Path> path_history;
 	public ArrayList<Double> reward_history;
-	public Agent(AgentType t) {
+	public int[] other_history;
+	private double[] dist;
+	public Agent(AgentType t, CongestionGame g) {
 		this.type = t;
 		path_history = new ArrayList<Path>();
 		reward_history = new ArrayList<Double>();
+		other_history = new int[g.num_path];
+		dist = new double[g.num_path];
+		Arrays.fill(other_history, 0);
+		Arrays.fill(dist, 0);
 	}
 	
 	public double calculateAvgCost() {
@@ -20,26 +25,59 @@ public class Agent {
 		}
 		return total / (double) (reward_history.size());
 	}
+	
+	public void recordOthers(int[] path_instance) {
+		for (int i = 0; i < path_instance.length; ++i) {
+			other_history[i] += path_instance[i];
+		}
+		Path last_choice = path_history.get(path_history.size() - 1);
+		if (other_history.length == 2) {
+			if (last_choice.type == PathType.BOT) {
+				other_history[1] -= 1;
+			} else {
+				other_history[0] -= 1;
+			}
+		} else {
+			other_history[last_choice.type.ordinal()] -= 1;
+		}
+		
+		this.normalize();
+	}
+	
+	private void normalize() {
+		int total = 0;
+		for (int i = 0; i < other_history.length; ++i) {
+			total += other_history[i];
+		}
+		System.out.print("Distribution: ");
+		for (int i = 0; i < dist.length; ++i) {
+			dist[i] = (double)other_history[i] / (double)total;
+			System.out.print(dist[i]);
+		}
+		System.out.println();
+	}
 
 	public Path choosePath(CongestionGame g) {
 		double cost;
 		int best_route;
 		switch (type) {
 		case FAgent:{
-			double [] costs = new double[3];
-			costs[0] = 0;
-			costs[1] = 0;
-			costs[2] = 0;
-
-			int agent_num_top = (int)(g.path_dist[0]*g.num_agent);
-			costs[0] = g.paths[0].totalCost(agent_num_top);
-
-
-			int agent_num_mid = (int)(g.path_dist[1] * g.num_agent);
-			costs[1] = g.paths[1].totalCost(agent_num_mid);
-
-			int agent_num_bot = (int)(g.path_dist[2] * g.num_agent);
-			costs[2] = g.paths[2].totalCost(agent_num_bot);
+			double [] costs = new double[g.num_path];
+			for (int i = 0; i < g.num_path; ++i) {
+				costs[i] = 0;
+			}
+			for (int i = 0; i < costs.length; ++i) {
+				int agent_num = (int)(dist[i]*g.num_agent);
+				costs[i] = g.paths[i].totalCost(agent_num);
+			}
+//			int agent_num_top = (int)(g.path_dist[0]*g.num_agent);
+//			costs[0] = g.paths[0].totalCost(agent_num_top);
+//
+//			int agent_num_mid = (int)(g.path_dist[1] * g.num_agent);
+//			costs[1] = g.paths[1].totalCost(agent_num_mid);
+//
+//			int agent_num_bot = (int)(g.path_dist[2] * g.num_agent);
+//			costs[2] = g.paths[2].totalCost(agent_num_bot);
 
 			
 
@@ -62,16 +100,21 @@ public class Agent {
 			if(mins.size() > 1) {
 				int rando = (int)(Math.random()*mins.size());
 				best_route = mins.get(rando);
-			} 
+			}
+//			System.out.println("round: " + g.round + " chose: " + best_route);
 			return g.paths[best_route];
 		}
 		case EAgent:{ //epsilon value determined here
 			double dice = Math.random();
 			if (dice < 0.2) {
-				return g.paths[(int)(Math.random() * 3)];
+				return g.paths[(int)(Math.random() * g.num_path)];
 			} else {
-				double[] avg = new double[3];
-				int[] counts = new int[3];
+				double[] avg = new double[g.num_path];
+				int[] counts = new int[g.num_path];
+				for (int i = 0; i < avg.length; ++i) {
+					avg[i] = 0;
+					counts[i] = 0;
+				}
 				for (int i = 0; i < path_history.size(); ++i) {
 					Path p = path_history.get(i);
 					switch (p.type) {
@@ -84,8 +127,13 @@ public class Agent {
 						avg[1] = (avg[1] + reward_history.get(i))/2;
 						break;
 					case BOT:
-						counts[2] ++;
-						avg[2] = (avg[2] + reward_history.get(i))/2;
+						if (g.num_path > 2) {
+							counts[2] ++;
+							avg[2] = (avg[2] + reward_history.get(i))/2;
+						} else {
+							counts[1] ++;
+							avg[1] = (avg[1] + reward_history.get(i))/2;
+						}
 						break;
 					}
 				}
@@ -93,6 +141,7 @@ public class Agent {
 				mins.add(0);
 				cost = avg[0];
 				best_route = 0;
+
 				for (int i = 1; i < avg.length; ++i) {
 					if ((avg[i])< cost) {
 						mins.clear();
@@ -111,14 +160,13 @@ public class Agent {
 				return g.paths[best_route];
 			}}
 		case UAgent:{
-			double[] avg = new double[3];
-			int[] counts = new int[3];
-			avg[0] = 0;
-			avg[1] = 0;
-			avg[2] = 0;
-			counts[0] = 0;
-			counts[1] = 0;
-			counts[2] = 0;
+			double[] avg = new double[g.num_path];
+			int[] counts = new int[g.num_path];
+			
+			for (int i = 0; i < avg.length; ++i) {
+				avg[i] = 0;
+				counts[i] = 0;
+			}
 
 			for (int i = 0; i < path_history.size(); ++i) {
 				Path p = path_history.get(i);
@@ -134,20 +182,32 @@ public class Agent {
 					avg[1] = (avg[1] + reward_history.get(i))/2;
 					break;
 				case BOT:
-					counts[2] ++;
-					//avg[2] += reward_history.get(i);
-					avg[2] = (avg[2] + reward_history.get(i))/2;
+					if (g.num_path > 2) {
+						counts[2] ++;
+						//avg[2] += reward_history.get(i);
+						avg[2] = (avg[2] + reward_history.get(i))/2;
+					} else {
+						counts[1] ++;
+						//avg[2] += reward_history.get(i);
+						avg[1] = (avg[1] + reward_history.get(i))/2;
+					}
+
 					break;
 				}
 			}
 
 			int total_move = path_history.size();
 			if(total_move == 0) {
-				int rando = (int)(Math.random()*3);
+				int rando = (int)(Math.random()*g.num_path);
 				return g.paths[rando];
 			}
 			//			double min = avg[0] / counts[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
-			double min = avg[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
+			double min = 0;
+			if (counts[0] == 0) {
+				min = 0;
+			} else {
+				min = avg[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
+			}
 
 			best_route = 0;
 			double valuation;
@@ -179,13 +239,16 @@ public class Agent {
 			return g.paths[best_route];
 		}
 		case DAgent:{
-			double [] costs = new double[3];
+			double [] costs = new double[g.num_path];
 			double dice = Math.random();
-			double[] avg = new double[3];
-			int[] counts = new int[3];
-			counts[0] = 0;
-			counts[1] = 0;
-			counts[2] = 0;
+			double[] avg = new double[g.num_path];
+			int[] counts = new int[g.num_path];
+			
+			for (int i = 0; i < avg.length; ++i) {
+				avg[i] = 0;
+				counts[i] = 0;
+				costs[i] = 0;
+			}
 			for (int i = 0; i < path_history.size(); ++i) {
 				Path p = path_history.get(i);
 				switch (p.type) {
@@ -198,8 +261,13 @@ public class Agent {
 					avg[1] = (avg[1] + reward_history.get(i))/2;
 					break;
 				case BOT:
-					counts[2] ++;
-					avg[2] = (avg[2] + reward_history.get(i))/2;
+					if (g.num_path > 2) {
+						counts[2] ++;
+						avg[2] = (avg[2] + reward_history.get(i))/2;
+					} else {
+						counts[1] ++;
+						avg[1] = (avg[1] + reward_history.get(i))/2;
+					}
 					break;
 				}
 			}
