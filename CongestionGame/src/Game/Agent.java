@@ -12,6 +12,14 @@ public class Agent {
 		path_history = new ArrayList<Path>();
 		reward_history = new ArrayList<Double>();
 	}
+	
+	public double calculateAvgCost() {
+		double total = 0;
+		for (int i = 0; i < reward_history.size(); ++i) {
+			total += reward_history.get(i);
+		}
+		return total / (double) (reward_history.size());
+	}
 
 	public Path choosePath(CongestionGame g) {
 		double cost;
