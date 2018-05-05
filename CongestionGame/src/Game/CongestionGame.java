@@ -13,7 +13,6 @@ public class CongestionGame {
 	Path[] paths;
 	
 	public int[] path_history;
-	public double[] path_dist;
 	
 	public int[] path_instance; //record number of agents on each path for one simulation
 	
@@ -55,17 +54,9 @@ public class CongestionGame {
 			agents.add(new Agent(AgentType.DAgent, this));
 		}
 		path_history = new int[num_path];
-		path_dist = new double[num_path];
 		path_instance = new int[num_path];
 	}
 	
-	private void normalize() {
-		int total = (round * num_agent);
-		double dubTot = (double)(1.0*(total));
-		for (int i = 0; i < path_dist.length; ++i) {
-			path_dist[i] = ((double)(path_history[i]))/dubTot;
-		}
-	}
 	
 	public void simulate() {
 		double inclementWeather = Math.random();
@@ -173,7 +164,6 @@ public class CongestionGame {
 				path_history[choice.type.ordinal()] += 1;
 			}
 		}
-		normalize();
 		data.add(agentChoice);
 		System.out.println("Round: " + round);
 		for (int i = 0; i < 4; ++i) {
