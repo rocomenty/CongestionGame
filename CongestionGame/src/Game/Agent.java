@@ -74,6 +74,10 @@ public class Agent {
 			avg[0] = 0;
 			avg[1] = 0;
 			avg[2] = 0;
+			counts[0] = 0;
+			counts[1] = 0;
+			counts[2] = 0;
+			
 			for (int i = 0; i < path_history.size(); ++i) {
 				Path p = path_history.get(i);
 				switch (p.type) {
@@ -96,8 +100,13 @@ public class Agent {
 			}
 		
 			int total_move = path_history.size();
+			if(total_move == 0) {
+				int rando = (int)(Math.random()*3);
+				return g.paths[rando];
+			}
 //			double min = avg[0] / counts[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
 			double min = avg[0] + Math.sqrt(2*Math.log(total_move) / counts[0]);
+			
 			best_route = 0;
 			double valuation;
 			ArrayList<Integer> mins = new ArrayList<Integer>();

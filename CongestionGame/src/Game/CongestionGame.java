@@ -105,8 +105,8 @@ public class CongestionGame {
 	}
 	
 	public static void main(String[] args) {
-		CongestionGame game = new CongestionGame(0,10,1000,0, 100.0, 45.0);
-		game.simulator(50);
+		CongestionGame game = new CongestionGame(0,1000,1000,0, 100.0, 45.0);
+		game.simulator(100);
 	}
 
 }
