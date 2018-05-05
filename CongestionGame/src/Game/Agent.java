@@ -9,6 +9,8 @@ public class Agent {
 	public ArrayList<Double> reward_history;
 	public Agent(AgentType t) {
 		this.type = t;
+		path_history = new ArrayList<Path>();
+		reward_history = new ArrayList<Double>();
 	}
 	
 	public Path choosePath(CongestionGame g) {

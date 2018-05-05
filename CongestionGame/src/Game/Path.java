@@ -9,6 +9,7 @@ public class Path {
 	
 	public Path(PathType t) {
 		roads = new ArrayList<Road>();
+		type = t;
 		if (t == PathType.MID) { //mid path is two roads with variable cost
 			roads.add(new Road(false));
 			roads.add(new Road(false));
