@@ -369,10 +369,6 @@ public class CongestionGame {
 			fw.append(String.valueOf(result_3[1] / num_trial));
 			fw.flush();
 			
-			Arrays.fill(result_1, 0);
-			Arrays.fill(result_2, 0);
-			Arrays.fill(result_3, 0);
-			
 		} catch (Exception e) {
 			System.out.println("Error in CsvFileWriter !!!");
 			e.printStackTrace();
@@ -396,13 +392,13 @@ public class CongestionGame {
 		try {
 			fw = new FileWriter(filename);
 			final int num_trial = 100;
-			final int num_sim = 500;
+			final int num_sim = 300;
 			double result = 0.0;
 			fw.append(file_header.toString());
 			fw.append(NEW_LINE_SEPARATOR);
 			
 			double epislon = 0;
-			for (double e = epislon; e <= 1; e += 0.05) {
+			for (double e = epislon; e <= 1; e += 0.02) {
 				for (int i = 0; i < num_trial; ++i) {
 					CongestionGame game = new CongestionGame(0, 40, 0, 0, 1, 45, true, e);
 					result += (game.simulator(num_sim))[1];
@@ -416,6 +412,53 @@ public class CongestionGame {
 				System.out.println("Epsilon at: " + e);
 				
 			}
+			
+		} catch (Exception e) {
+			System.out.println("Error in CsvFileWriter !!!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fw.flush();
+				fw.close();
+			} catch (Exception e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static void writeToCSV_COMPARE(String filename) {
+		FileWriter fw = null;
+		String file_header = "f_agent, e_agent, u_agent";
+		final String NEW_LINE_SEPARATOR = "\n";
+		final String COMMA_DELIMITER = ",";
+
+		try {
+			fw = new FileWriter(filename);
+			final int num_trial = 100;
+			final int num_sim = 300;
+			double[] result_1 = new double[4];
+ 			double[] inst_1 = new double[4];
+			fw.append(file_header.toString());
+			fw.append(NEW_LINE_SEPARATOR);
+			
+			for (int i = 0; i < num_trial; ++i) {
+				CongestionGame game_1 = new CongestionGame(14,14,14,0,1,45, true, 0.2);
+				inst_1 = game_1.simulator(num_sim);
+				for (int j = 0; j < result_1.length; ++j) {
+					result_1[j] += inst_1[j];
+				}
+			}
+			fw.append(String.valueOf(result_1[0] / num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_1[1] / num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_1[2] / num_trial));
+			fw.append(NEW_LINE_SEPARATOR);
+			System.out.println("at: " + num_sim);
+			fw.flush();
+			
+			Arrays.fill(result_1, 0);
 			
 		} catch (Exception e) {
 			System.out.println("Error in CsvFileWriter !!!");
@@ -458,6 +501,8 @@ public class CongestionGame {
 //		writeToCSV_HIGHWAY(filename);
 		filename = "/Users/chengluo/Desktop/epsilon.csv";
 		writeToCSV_Epsilon(filename);
+//		filename = "/Users/chengluo/Desktop/compare.csv";
+//		writeToCSV_COMPARE(filename);
 	}
 	
 
