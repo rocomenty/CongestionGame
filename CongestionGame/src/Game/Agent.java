@@ -8,6 +8,7 @@ public class Agent {
 	public ArrayList<Double> reward_history;
 	public int[] other_history;
 	private double[] dist;
+	private double epsilon;
 	public Agent(AgentType t, CongestionGame g) {
 		this.type = t;
 		path_history = new ArrayList<Path>();
@@ -49,12 +50,12 @@ public class Agent {
 		for (int i = 0; i < other_history.length; ++i) {
 			total += other_history[i];
 		}
-		System.out.print("Distribution: ");
+		//System.out.print("Distribution: ");
 		for (int i = 0; i < dist.length; ++i) {
 			dist[i] = (double)other_history[i] / (double)total;
-			System.out.print(dist[i]);
+			//System.out.print(dist[i] + ", ");
 		}
-		System.out.println();
+		//System.out.println();
 	}
 
 	public Path choosePath(CongestionGame g) {
@@ -106,7 +107,7 @@ public class Agent {
 		}
 		case EAgent:{ //epsilon value determined here
 			double dice = Math.random();
-			if (dice < 0.2) {
+			if (dice < g.epsilon) {
 				return g.paths[(int)(Math.random() * g.num_path)];
 			} else {
 				double[] avg = new double[g.num_path];

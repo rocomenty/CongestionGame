@@ -24,8 +24,11 @@ public class CongestionGame {
 	public String[] agent_types = {"FAgent", "EAgent", "UAgent", "DAgent"};
 	public int weatherCount = 0;
 	
-	public CongestionGame(int n_f_a, int n_e_a, int n_u_a, int n_d_a,  double ratio, double cost, boolean has_super) {
+	public double epsilon;
+	
+	public CongestionGame(int n_f_a, int n_e_a, int n_u_a, int n_d_a,  double ratio, double cost, boolean has_super, double epsilon) {
 		agents = new ArrayList<Agent>();
+		this.epsilon = epsilon;
 		if (has_super) {
 			paths = new Path[3];
 			paths[0] = new Path(PathType.TOP, ratio, cost);
@@ -58,7 +61,7 @@ public class CongestionGame {
 	}
 	
 	
-	public void simulate() {
+	public int[] simulate() {
 		double inclementWeather = Math.random();
 		agentChoice = new int[4][num_path];
 		round += 1;
@@ -165,15 +168,15 @@ public class CongestionGame {
 			}
 		}
 		data.add(agentChoice);
-		System.out.println("Round: " + round);
-		for (int i = 0; i < 4; ++i) {
-			System.out.println("Agent: " + i + " choices: ");
-			for (int j = 0; j < num_path; ++j) {
-				System.out.print(agentChoice[i][j] + ", ");
-			}
-			System.out.println();
-		}
-		System.out.println();
+//		System.out.println("Round: " + round);
+//		for (int i = 2; i < 3; ++i) {
+//			System.out.println("Agent choices: ");
+//			for (int j = 0; j < num_path; ++j) {
+//				System.out.print(agentChoice[i][j] + ", ");
+//			}
+//			System.out.println();
+//		}
+//		System.out.println();
 //		System.out.println("Top path: " + path_instance[0]);
 //		System.out.println("Mid path: " + path_instance[1]);
 //		System.out.println("Bot path: " + path_instance[2]);
@@ -185,11 +188,11 @@ public class CongestionGame {
 //			System.out.println();
 //		}
 		
-		
+		return path_instance;
 		
 	}
 	
-	public void simulator(int runs) {
+	public double[] simulator(int runs) {
 		for(int i = 0; i < runs; i++) {
 			this.simulate();
 		}
@@ -241,8 +244,9 @@ public class CongestionGame {
 			}
 		}
 		
-		System.out.println("FAgent: " + costs[0] + "; EAgent: " + costs[1] + "; UAgent: " + costs[2] + "; DAgent: " + costs[3]);
+		//System.out.println("FAgent: " + costs[0] + "; EAgent: " + costs[1] + "; UAgent: " + costs[2] + "; DAgent: " + costs[3]);
 		
+		return costs;
 //		double cost = 0;
 //		double count = 0;
 //		for (int i = 0; i < agents.size(); ++i) {
@@ -256,10 +260,204 @@ public class CongestionGame {
 		
 	}
 	
+	public static void writeToCSV(String filename) {
+		FileWriter fw = null;
+		String file_header = "num_sim, f_agent, e_agent, u_agent";
+		final String NEW_LINE_SEPARATOR = "\n";
+		final String COMMA_DELIMITER = ",";
+
+		try {
+			fw = new FileWriter(filename);
+			final int num_trial = 100;
+			double[] result_1 = new double[4];
+			double[] result_2 = new double[4];
+			double[] result_3 = new double[4];
+ 			double[] inst_1 = new double[4];
+			double[] inst_2 = new double[4];
+			double[] inst_3 = new double[4];
+			fw.append(file_header.toString());
+			fw.append(NEW_LINE_SEPARATOR);
+			for (int num_sim = 1; num_sim < 500; num_sim += 10) {
+				for (int i = 0; i < num_trial; ++i) {
+					CongestionGame game_1 = new CongestionGame(40,0,0,0,1,45, true, 0.2);
+					CongestionGame game_2 = new CongestionGame(0,40,0,0,1,45, true, 0.2);
+					CongestionGame game_3 = new CongestionGame(0,0,40,0,1,45, true, 0.2);
+					inst_1 = game_1.simulator(num_sim);
+					inst_2 = game_2.simulator(num_sim);
+					inst_3 = game_3.simulator(num_sim);
+					for (int j = 0; j < result_1.length; ++j) {
+						result_1[j] += inst_1[j];
+						result_2[j] += inst_2[j];
+						result_3[j] += inst_3[j];
+					}
+				}
+				fw.append(String.valueOf(num_sim));
+				fw.append(COMMA_DELIMITER);
+				fw.append(String.valueOf(result_1[0] / num_trial));
+				fw.append(COMMA_DELIMITER);
+				fw.append(String.valueOf(result_2[1] / num_trial));
+				fw.append(COMMA_DELIMITER);
+				fw.append(String.valueOf(result_3[2] / num_trial));
+				fw.append(NEW_LINE_SEPARATOR);
+				System.out.println("at: " + num_sim);
+				fw.flush();
+				
+				Arrays.fill(result_1, 0);
+				Arrays.fill(result_2, 0);
+				Arrays.fill(result_3, 0);
+			}
+			
+		} catch (Exception e) {
+			System.out.println("Error in CsvFileWriter !!!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fw.flush();
+				fw.close();
+			} catch (Exception e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static void writeToCSV_HIGHWAY(String filename) {
+		FileWriter fw = null;
+		String file_header = "num_trial, f_agent_h, f_agent_n, e_agent_h, e_agent_n, u_agent_h, u_agent_n";
+		final String NEW_LINE_SEPARATOR = "\n";
+		final String COMMA_DELIMITER = ",";
+
+		try {
+			fw = new FileWriter(filename);
+			final int num_trial = 100;
+			final int num_sim = 500;
+			double[] result_1 = new double[2];
+			double[] result_2 = new double[2];
+			double[] result_3 = new double[2];
+			fw.append(file_header.toString());
+			fw.append(NEW_LINE_SEPARATOR);
+			boolean hasHighway = true;
+			for (int i = 0; i < num_trial; ++i) {
+				CongestionGame game_1 = new CongestionGame(40,0,0,0,1,45, true, 0.2);
+				CongestionGame game_1_n = new CongestionGame(40,0,0,0,1,45, false, 0.2);
+				CongestionGame game_2 = new CongestionGame(0,40,0,0,1,45, true, 0.2);
+				CongestionGame game_2_n = new CongestionGame(0,40,0,0,1,45, false, 0.2);
+				CongestionGame game_3 = new CongestionGame(0,0,40,0,1,45, true, 0.2);
+				CongestionGame game_3_n = new CongestionGame(0,0,40,0,1,45, false, 0.2);
+				result_1[0] += (game_1.simulator(num_sim))[0];
+				result_1[1] += (game_1_n.simulator(num_sim))[0];
+				result_2[0] += (game_2.simulator(num_sim))[1];
+				result_2[1] += (game_2_n.simulator(num_sim))[1];
+				result_3[0] += (game_3.simulator(num_sim))[2];
+				result_3[1] += (game_3_n.simulator(num_sim))[2];
+				if (i % 10 ==0) {
+					System.out.println("At: " + i);
+				}
+			}
+			fw.append(String.valueOf(num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_1[0] / num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_1[1] / num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_2[0] / num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_2[1] / num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_3[0] / num_trial));
+			fw.append(COMMA_DELIMITER);
+			fw.append(String.valueOf(result_3[1] / num_trial));
+			fw.flush();
+			
+			Arrays.fill(result_1, 0);
+			Arrays.fill(result_2, 0);
+			Arrays.fill(result_3, 0);
+			
+		} catch (Exception e) {
+			System.out.println("Error in CsvFileWriter !!!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fw.flush();
+				fw.close();
+			} catch (Exception e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static void writeToCSV_Epsilon(String filename) {
+		FileWriter fw = null;
+		String file_header = "epsilon, avg_cost_e";
+		final String NEW_LINE_SEPARATOR = "\n";
+		final String COMMA_DELIMITER = ",";
+
+		try {
+			fw = new FileWriter(filename);
+			final int num_trial = 100;
+			final int num_sim = 500;
+			double result = 0.0;
+			fw.append(file_header.toString());
+			fw.append(NEW_LINE_SEPARATOR);
+			
+			double epislon = 0;
+			for (double e = epislon; e <= 1; e += 0.05) {
+				for (int i = 0; i < num_trial; ++i) {
+					CongestionGame game = new CongestionGame(0, 40, 0, 0, 1, 45, true, e);
+					result += (game.simulator(num_sim))[1];
+				}
+				fw.append(String.valueOf(e));
+				fw.append(COMMA_DELIMITER);
+				fw.append(String.valueOf(result / num_trial));
+				fw.append(NEW_LINE_SEPARATOR);
+				fw.flush();
+				result = 0;
+				System.out.println("Epsilon at: " + e);
+				
+			}
+			
+		} catch (Exception e) {
+			System.out.println("Error in CsvFileWriter !!!");
+			e.printStackTrace();
+		} finally {
+			try {
+				fw.flush();
+				fw.close();
+			} catch (Exception e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		//CongestionGame game = new CongestionGame(FA,EA,UBA,DA,n/ratio,fixed);
-		CongestionGame game = new CongestionGame(40,0,0,0,1,45, true);
-		game.simulator(5);
+//		CongestionGame game = new CongestionGame(40,0,0,0,1,45, true);
+//		final int num_trial = 100;
+//		final int num_sim = 1000;
+//		double[] result = new double[4];
+//		double[] inst = new double[4];
+//		for (int i = 0; i < num_trial; ++i) {
+//			CongestionGame game = new CongestionGame(0,0,40,0,1,45, true);
+//			inst = game.simulator(num_sim);
+//			for (int j = 0; j < result.length; ++j) {
+//				result[j] += inst[j];
+//			}
+//		}
+//		System.out.println("FAgent: " + result[0] / num_trial + "; EAgent: " + result[1] / num_trial + "; UAgent: " + result[2] / num_trial + "; DAgent: " +result[3] / num_trial);
+////		game.simulator(10);
+//		CongestionGame game_2 = new CongestionGame(0, 40, 0, 0, 1, 45, true);
+//		game_2.simulator(10);
+//		CongestionGame game_3 = new CongestionGame(0, 0, 40, 0, 1, 45, true);
+//		game_3.simulator(10);
+		String filename = "";
+//		filename ="/Users/chengluo/Desktop/test.csv";
+//		writeToCSV(filename);
+//		filename = "/Users/chengluo/Desktop/highway.csv";
+//		writeToCSV_HIGHWAY(filename);
+		filename = "/Users/chengluo/Desktop/epsilon.csv";
+		writeToCSV_Epsilon(filename);
 	}
 	
 
