@@ -1,1 +1,3 @@
-# CongestionGame
+In this project, we explore the Braess Paradox in congestion games in the context of repeated games where agents are allowed to play a congestion game repeatedly, learn, and adjust their path choice based on either their own past experience or other agents’ past actions. In particular, we model the agents’ behavior using three different learning algorithms, explore whether agents repeatedly playing the game converge to a equilibrium, and measure how various factors can affect agents’ average path cost. In addition, we discuss how agents using different learning algorithms interact with one another. # CongestionGame.
+
+The detailed report can be find in Report.pdf
